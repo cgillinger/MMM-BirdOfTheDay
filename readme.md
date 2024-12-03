@@ -3,6 +3,10 @@
 
 A MagicMirror² module to display a random bird with an image and optional information such as its name, region, scientific name, and conservation status. Powered by the **Nuthatch API** by Last Elm Software.
 
+
+![image](https://github.com/user-attachments/assets/8d2b0cba-f797-42fc-a33b-6d5a1d5a2d25)
+
+
 ## Features
 - Displays a random bird with an image.
 - Configurable rotation: **Hourly**, **Daily**, or **Weekly**.
