@@ -1,9 +1,9 @@
 /**
  * MagicMirror² Module: MMM-BirdOfTheDay
  * Displays a random bird with its name, image, and optional details (region, scientific name, conservation status).
- * Supports configurable rotation (hourly, daily, weekly) and avoids duplicate birds within a defined range.
+ * Supports configurable rotation (hourly, daily, weekly).
  *
- * Author: Christian Gillinger
+ * Author: Your Name
  * License: MIT
  */
 
@@ -21,11 +21,9 @@ Module.register("MMM-BirdOfTheDay", {
         showSciName: true, // Display scientific name
         showRegion: true, // Display region
         showStatus: true, // Display conservation status
-        maxHistory: 50, // Prevent same bird within this many rotations
     },
 
     bird: null, // Object to store the current bird data
-    history: [], // Track displayed birds
 
     /**
      * Module initialization
@@ -59,7 +57,7 @@ Module.register("MMM-BirdOfTheDay", {
     },
 
     /**
-     * Fetch a random bird from the API, avoiding duplicates within the maxHistory range
+     * Fetch a random bird from the API
      */
     getBird: function () {
         fetch(this.config.endpoint, {
@@ -74,28 +72,8 @@ Module.register("MMM-BirdOfTheDay", {
                     (bird) => bird.images && bird.images.length > 0
                 );
                 if (birdsWithImages.length > 0) {
-                    let bird;
-                    let attempts = 0;
-
-                    // Find a bird that is not in the history
-                    do {
-                        const randomIndex = Math.floor(Math.random() * birdsWithImages.length);
-                        bird = birdsWithImages[randomIndex];
-                        attempts++;
-                    } while (this.history.includes(bird.id) && attempts < 100);
-
-                    // If attempts exceeded, fallback to the first bird
-                    if (attempts >= 100) {
-                        console.warn("Could not find a unique bird, showing the first available.");
-                    }
-
-                    // Add to history and manage history size
-                    this.history.push(bird.id);
-                    if (this.history.length > this.config.maxHistory) {
-                        this.history.shift(); // Remove the oldest entry
-                    }
-
-                    this.bird = bird;
+                    const randomIndex = Math.floor(Math.random() * birdsWithImages.length);
+                    this.bird = birdsWithImages[randomIndex];
                     this.updateDom(this.config.fadeSpeed); // Update the DOM
                 }
             })

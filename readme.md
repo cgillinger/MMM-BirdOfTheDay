@@ -19,7 +19,7 @@ A MagicMirror² module to display a random bird with an image and optional infor
    ```
 2. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/MMM-BirdOfTheDay.git
+   git clone https://github.com/cgillinger/MMM-BirdOfTheDay.git
    ```
 3. Navigate into the module's directory:
    ```bash
@@ -58,6 +58,19 @@ A MagicMirror² module to display a random bird with an image and optional infor
 - **Bird of the Hour**: Updates every hour.
 - **Bird of the Day**: Updates daily.
 - **Bird of the Week**: Updates weekly.
+
+## Configuration Options
+
+| **Option**       | **Description**                                        | **Default**   | **Required** |
+|-------------------|--------------------------------------------------------|---------------|--------------|
+| `apiKey`         | The API key for the Nuthatch API                        | `null`        | **Yes**      |
+| `rotation`       | How often the bird data should update (`Hourly`, etc.)  | `"Daily"`     | No           |
+| `imageWidth`     | Width of the bird image                                 | `"400px"`     | No           |
+| `fontSize`       | Font size for the text (`small`, `medium`, `large`)     | `"medium"`    | No           |
+| `showName`       | Whether to display the bird's common name               | `true`        | No           |
+| `showSciName`    | Whether to display the bird's scientific name           | `true`        | No           |
+| `showRegion`     | Whether to display the region(s)                        | `true`        | No           |
+| `showStatus`     | Whether to display the conservation status              | `true`        | No           |
 
 ## Customization
 You can further customize the styles by editing the `MMM-BirdOfTheDay.css` file, located in the module's folder.
