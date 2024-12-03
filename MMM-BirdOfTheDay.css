@@ -1,0 +1,30 @@
+/* MMM-BirdOfTheDay.css */
+
+/* Header (dynamic title) */
+.bird-title {
+    text-align: center;
+    font-size: large;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+/* Image (centered) */
+.bird-image {
+    display: block;
+    margin: 10px auto;
+}
+
+/* Bird name (centered under the image) */
+.bird-name {
+    text-align: center;
+    font-size: medium;
+    font-weight: bold;
+    margin: 5px 0;
+}
+
+/* Bird information (left-aligned) */
+.bird-info {
+    text-align: left;
+    margin-top: 10px;
+    font-size: medium;
+}
