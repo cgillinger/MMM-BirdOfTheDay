@@ -23,15 +23,7 @@ A MagicMirror² module to display a random bird with an image and optional infor
    ```
 2. Clone this repository:
    ```bash
-   git clone https://github.com/cgillinger/MMM-BirdOfTheDay.git
-   ```
-3. Navigate into the module's directory:
-   ```bash
-   cd MMM-BirdOfTheDay
-   ```
-4. Install the required dependencies:
-   ```bash
-   npm install
+   git clone https://github.com/cgillinger/MMM-BirdOfTheDay
    ```
 
 ## Configuration
