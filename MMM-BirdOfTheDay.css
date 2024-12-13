@@ -1,30 +1,95 @@
-/* MMM-BirdOfTheDay.css */
+/* Wrapper for the entire bird content */
+.bird-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
 
-/* Header (dynamic title) */
+/* Content container for image and text */
+.bird-content {
+    display: flex;
+    flex-direction: column; /* Stack image and text vertically */
+    align-items: center; /* Center-align the content block */
+    max-width: 100%; /* Ensure content fits within the parent container */
+    gap: 20px; /* Spacing between image and text */
+}
+
+/* Title container and styling */
+.bird-title-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+    flex-direction: column; /* Ensures the line is stacked */
+}
+
 .bird-title {
+    width: auto;
     text-align: center;
     font-size: large;
     font-weight: bold;
-    margin: 10px 0;
+    margin: 0;
+    display: inline-block;
 }
 
-/* Image (centered) */
+/* Horizontal line below the title */
+.bird-title-line {
+    width: 100%; /* Ensures it spans the full width */
+    border: 0; /* Remove default border */
+    border-top: 2px solid #ffffff; /* White solid line for visibility */
+    margin: 5px 0; /* Space around the line */
+}
+
+/* Image container and styling */
+.bird-image-container {
+    width: 100%; /* Ensure image container spans the full width */
+    text-align: center; /* Center-align the image */
+}
+
 .bird-image {
-    display: block;
-    margin: 10px auto;
+    display: block; /* Treat image as a block element */
+    max-width: 100%; /* Prevent image from overflowing */
+    height: auto; /* Maintain aspect ratio */
+    margin: 0 auto; /* Center image horizontally */
 }
 
-/* Bird name (centered under the image) */
+/* Text information container and styling */
+.bird-info {
+    max-width: 400px; /* Ensure text doesn't exceed image width */
+    word-wrap: break-word; /* Prevent long words from overflowing */
+    overflow-wrap: break-word; /* Alternative for word wrapping */
+    padding: 0; /* Keep text aligned to image boundaries */
+    box-sizing: border-box; /* Include padding in width calculation */
+    text-align: left; /* Left-align text */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Align child elements to the left */
+}
+
+/* Styling for individual text elements */
 .bird-name {
-    text-align: center;
+    text-align: left; /* Left-align text */
     font-size: medium;
     font-weight: bold;
     margin: 5px 0;
 }
 
-/* Bird information (left-aligned) */
-.bird-info {
-    text-align: left;
-    margin-top: 10px;
-    font-size: medium;
+.bird-info p {
+    text-align: left; /* Align paragraphs to the left */
+    margin: 5px 0;
+}
+
+/* Layout variations for different text positions */
+.bird-text-below .bird-content {
+    flex-direction: column;
+    align-items: center;
+}
+
+.bird-text-right .bird-content {
+    flex-direction: row;
+}
+
+.bird-text-left .bird-content {
+    flex-direction: row-reverse;
 }

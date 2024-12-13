@@ -1,56 +1,51 @@
 /**
  * MagicMirror² Module: MMM-BirdOfTheDay
- * Displays a random bird with its name, image, and optional details (region, scientific name, conservation status).
- * Supports configurable rotation (hourly, daily, weekly) and avoids duplicate birds within a defined range.
- *
- * Author: Christian Gillinger
- * License: MIT
+ * Version: 1.1.8
+ * 
+ * Modifications:
+ * - Changed bird identification to use `sciName` instead of `id` for preventing duplicates.
+ * - Annotated code for clarity.
  */
 
 Module.register("MMM-BirdOfTheDay", {
-    // Default configuration options
     defaults: {
-        apiKey: "YOUR_API_KEY_HERE", // API key from the bird API provider
-        endpoint: "https://nuthatch.lastelm.software/v2/birds?hasImg=true", // API endpoint
-        rotation: "Daily", // Options: "Hourly", "Daily", "Weekly"
-        updateInterval: 24 * 60 * 60 * 1000, // Update interval in milliseconds (default: daily)
-        fadeSpeed: 2000, // Speed for fade-in effect (milliseconds)
-        imageWidth: "400px", // Width of the bird image
-        fontSize: "medium", // Font size for text
-        showName: true, // Display bird name
-        showSciName: true, // Display scientific name
-        showRegion: true, // Display region
-        showStatus: true, // Display conservation status
-        maxHistory: 50, // Prevent same bird within this many rotations
+        apiKey: "",
+        endpoint: "https://nuthatch.lastelm.software/v2/birds?hasImg=true",
+        rotation: "Daily", 
+        updateInterval: 24 * 60 * 60 * 1000, 
+        fadeSpeed: 2000, 
+        imageWidth: "400px", 
+        fontSize: "medium", 
+        showName: true, 
+        showSciName: true, 
+        showRegion: true, 
+        showStatus: true, 
+        maxHistory: 50, 
+        textPosition: "below", // Options: "below", "left", "right"
+        showTitleLine: true // Toggle to show/hide the line below the title
     },
 
-    bird: null, // Object to store the current bird data
-    history: [], // Track displayed birds
+    bird: null, 
+    history: [], // Tracks `sciName` instead of `id`
 
-    /**
-     * Module initialization
-     */
     start: function () {
-        this.updateIntervalFromRotation(); // Set the update interval based on rotation
-        this.getBird(); // Fetch bird data immediately upon starting
+        this.updateIntervalFromRotation();
+        this.getBird();
         setInterval(() => {
-            this.getBird(); // Fetch a new bird at the configured interval
+            this.getBird();
         }, this.config.updateInterval);
     },
 
-    /**
-     * Dynamically adjust the update interval based on the rotation setting
-     */
     updateIntervalFromRotation: function () {
         switch (this.config.rotation) {
             case "Weekly":
-                this.config.updateInterval = 7 * 24 * 60 * 60 * 1000; // One week
+                this.config.updateInterval = 7 * 24 * 60 * 60 * 1000;
                 break;
             case "Daily":
-                this.config.updateInterval = 24 * 60 * 60 * 1000; // One day
+                this.config.updateInterval = 24 * 60 * 60 * 1000;
                 break;
             case "Hourly":
-                this.config.updateInterval = 60 * 60 * 1000; // One hour
+                this.config.updateInterval = 60 * 60 * 1000;
                 break;
             default:
                 console.warn("Invalid rotation value. Defaulting to 'Daily'.");
@@ -58,9 +53,6 @@ Module.register("MMM-BirdOfTheDay", {
         }
     },
 
-    /**
-     * Fetch a random bird from the API, avoiding duplicates within the maxHistory range
-     */
     getBird: function () {
         fetch(this.config.endpoint, {
             headers: { "api-key": this.config.apiKey },
@@ -77,78 +69,87 @@ Module.register("MMM-BirdOfTheDay", {
                     let bird;
                     let attempts = 0;
 
-                    // Find a bird that is not in the history
+                    // Pick a bird with a unique sciName
                     do {
                         const randomIndex = Math.floor(Math.random() * birdsWithImages.length);
                         bird = birdsWithImages[randomIndex];
                         attempts++;
-                    } while (this.history.includes(bird.id) && attempts < 100);
+                    } while (this.history.includes(bird.sciName) && attempts < 100);
 
-                    // If attempts exceeded, fallback to the first bird
                     if (attempts >= 100) {
                         console.warn("Could not find a unique bird, showing the first available.");
                     }
 
-                    // Add to history and manage history size
-                    this.history.push(bird.id);
+                    // Add the bird's sciName to history and maintain maxHistory limit
+                    this.history.push(bird.sciName);
                     if (this.history.length > this.config.maxHistory) {
-                        this.history.shift(); // Remove the oldest entry
+                        this.history.shift();
                     }
 
                     this.bird = bird;
-                    this.updateDom(this.config.fadeSpeed); // Update the DOM
+                    this.updateDom(this.config.fadeSpeed);
                 }
             })
             .catch((error) => console.error("Error fetching bird data:", error));
     },
 
-    /**
-     * Define additional CSS styles
-     */
     getStyles: function () {
         return ["MMM-BirdOfTheDay.css"];
     },
 
-    /**
-     * Generate the DOM elements for the module
-     */
-    getDom: function () {
+    getDom: function() {
         const wrapper = document.createElement("div");
+        wrapper.className = `bird-wrapper bird-text-${this.config.textPosition}`;
 
         if (!this.bird) {
             wrapper.innerHTML = "Loading Bird...";
             return wrapper;
         }
 
-        // Dynamic header based on rotation
+        // Title container
+        const titleContainer = document.createElement("div");
+        titleContainer.className = "bird-title-container";
+
+        // Title
         const title = document.createElement("h2");
         title.className = "bird-title";
-        title.innerHTML =
-            this.config.rotation === "Weekly"
-                ? "Bird of the Week"
-                : this.config.rotation === "Hourly"
-                ? "Bird of the Hour"
-                : "Bird of the Day";
-        wrapper.appendChild(title);
+        title.innerHTML = this.config.rotation === "Weekly" 
+            ? "Bird of the Week" 
+            : this.config.rotation === "Hourly"
+            ? "Bird of the Hour"
+            : "Bird of the Day";
+        titleContainer.appendChild(title);
 
-        // Bird image
+        // Add horizontal line if enabled
+        if (this.config.showTitleLine) {
+            const line = document.createElement("hr");
+            line.className = "bird-title-line";
+            titleContainer.appendChild(line);
+        }
+
+        // Content wrapper
+        const contentWrapper = document.createElement("div");
+        contentWrapper.className = "bird-content";
+
+        // Image section
+        const imageContainer = document.createElement("div");
+        imageContainer.className = "bird-image-container";
         const image = document.createElement("img");
         image.className = "bird-image";
         image.src = this.bird.images[0];
         image.style.maxWidth = this.config.imageWidth;
-        wrapper.appendChild(image);
+        imageContainer.appendChild(image);
 
-        // Bird name (if enabled)
+        // Info section
+        const info = document.createElement("div");
+        info.className = "bird-info";
+
         if (this.config.showName) {
             const birdName = document.createElement("h3");
             birdName.className = "bird-name";
             birdName.innerHTML = this.bird.name;
-            wrapper.appendChild(birdName);
+            info.appendChild(birdName);
         }
-
-        // Additional information
-        const info = document.createElement("div");
-        info.className = "bird-info";
 
         if (this.config.showSciName) {
             const sciName = document.createElement("p");
@@ -171,8 +172,12 @@ Module.register("MMM-BirdOfTheDay", {
             info.appendChild(status);
         }
 
-        wrapper.appendChild(info);
+        // Assembly
+        wrapper.appendChild(titleContainer);
+        contentWrapper.appendChild(imageContainer);
+        contentWrapper.appendChild(info);
+        wrapper.appendChild(contentWrapper);
 
         return wrapper;
-    },
+    }
 });
