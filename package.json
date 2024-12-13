@@ -1,0 +1,26 @@
+{
+  "name": "MMM-BirdOfTheDay",
+  "version": "1.1.8",
+  "description": "A MagicMirror² module that displays a random bird with information using the Nuthatch API",
+  "main": "MMM-BirdOfTheDay.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cgillinger/MMM-BirdOfTheDay.git"
+  },
+  "keywords": [
+    "magicmirror",
+    "smart mirror",
+    "bird",
+    "wildlife",
+    "nature"
+  ],
+  "author": "cgillinger",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cgillinger/MMM-BirdOfTheDay/issues"
+  },
+  "homepage": "https://github.com/cgillinger/MMM-BirdOfTheDay#readme",
+  "dependencies": {
+    "node-fetch": "^2.6.1"
+  }
+}
