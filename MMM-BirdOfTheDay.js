@@ -1,6 +1,6 @@
 Module.register("MMM-BirdOfTheDay", {
     defaults: {
-        apiKey: "15fb4575-69cf-4a21-8793-f8bb209e4da6",
+        apiKey: "",
         endpoint: "https://nuthatch.lastelm.software/v2/birds",
         rotation: "Daily", 
         updateInterval: 24 * 60 * 60 * 1000, 
