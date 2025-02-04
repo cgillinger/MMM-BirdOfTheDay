@@ -1,16 +1,7 @@
-/**
- * MagicMirror² Module: MMM-BirdOfTheDay
- * Version: 1.1.8
- * 
- * Modifications:
- * - Changed bird identification to use `sciName` instead of `id` for preventing duplicates.
- * - Annotated code for clarity.
- */
-
 Module.register("MMM-BirdOfTheDay", {
     defaults: {
-        apiKey: "",
-        endpoint: "https://nuthatch.lastelm.software/v2/birds?hasImg=true",
+        apiKey: "15fb4575-69cf-4a21-8793-f8bb209e4da6",
+        endpoint: "https://nuthatch.lastelm.software/v2/birds",
         rotation: "Daily", 
         updateInterval: 24 * 60 * 60 * 1000, 
         fadeSpeed: 2000, 
@@ -20,13 +11,14 @@ Module.register("MMM-BirdOfTheDay", {
         showSciName: true, 
         showRegion: true, 
         showStatus: true, 
-        maxHistory: 50, 
-        textPosition: "below", // Options: "below", "left", "right"
-        showTitleLine: true // Toggle to show/hide the line below the title
+        maxHistory: 100,
+        pageSize: 100,
+        textPosition: "below",
+        showTitleLine: true
     },
 
     bird: null, 
-    history: [], // Tracks `sciName` instead of `id`
+    history: [],
 
     start: function () {
         this.updateIntervalFromRotation();
@@ -54,43 +46,43 @@ Module.register("MMM-BirdOfTheDay", {
     },
 
     getBird: function () {
-        fetch(this.config.endpoint, {
+        const url = `${this.config.endpoint}?hasImg=true&pageSize=${this.config.pageSize}`;
+        
+        fetch(url, {
             headers: { "api-key": this.config.apiKey },
         })
-            .then((response) => {
-                if (!response.ok) throw new Error("Failed to fetch bird data.");
-                return response.json();
-            })
-            .then((data) => {
-                const birdsWithImages = data.entities.filter(
-                    (bird) => bird.images && bird.images.length > 0
-                );
-                if (birdsWithImages.length > 0) {
-                    let bird;
-                    let attempts = 0;
+        .then((response) => {
+            if (!response.ok) throw new Error("Failed to fetch bird data.");
+            return response.json();
+        })
+        .then((data) => {
+            const birdsWithImages = data.entities.filter(
+                (bird) => bird.images && bird.images.length > 0
+            );
+            if (birdsWithImages.length > 0) {
+                let bird;
+                let attempts = 0;
 
-                    // Pick a bird with a unique sciName
-                    do {
-                        const randomIndex = Math.floor(Math.random() * birdsWithImages.length);
-                        bird = birdsWithImages[randomIndex];
-                        attempts++;
-                    } while (this.history.includes(bird.sciName) && attempts < 100);
+                do {
+                    const randomIndex = Math.floor(Math.random() * birdsWithImages.length);
+                    bird = birdsWithImages[randomIndex];
+                    attempts++;
+                } while (this.history.includes(bird.sciName) && attempts < 100);
 
-                    if (attempts >= 100) {
-                        console.warn("Could not find a unique bird, showing the first available.");
-                    }
-
-                    // Add the bird's sciName to history and maintain maxHistory limit
-                    this.history.push(bird.sciName);
-                    if (this.history.length > this.config.maxHistory) {
-                        this.history.shift();
-                    }
-
-                    this.bird = bird;
-                    this.updateDom(this.config.fadeSpeed);
+                if (attempts >= 100) {
+                    console.warn("Could not find a unique bird, showing the first available.");
                 }
-            })
-            .catch((error) => console.error("Error fetching bird data:", error));
+
+                this.history.push(bird.sciName);
+                if (this.history.length > this.config.maxHistory) {
+                    this.history.shift();
+                }
+
+                this.bird = bird;
+                this.updateDom(this.config.fadeSpeed);
+            }
+        })
+        .catch((error) => console.error("Error fetching bird data:", error));
     },
 
     getStyles: function () {
@@ -106,11 +98,9 @@ Module.register("MMM-BirdOfTheDay", {
             return wrapper;
         }
 
-        // Title container
         const titleContainer = document.createElement("div");
         titleContainer.className = "bird-title-container";
 
-        // Title
         const title = document.createElement("h2");
         title.className = "bird-title";
         title.innerHTML = this.config.rotation === "Weekly" 
@@ -120,18 +110,15 @@ Module.register("MMM-BirdOfTheDay", {
             : "Bird of the Day";
         titleContainer.appendChild(title);
 
-        // Add horizontal line if enabled
         if (this.config.showTitleLine) {
             const line = document.createElement("hr");
             line.className = "bird-title-line";
             titleContainer.appendChild(line);
         }
 
-        // Content wrapper
         const contentWrapper = document.createElement("div");
         contentWrapper.className = "bird-content";
 
-        // Image section
         const imageContainer = document.createElement("div");
         imageContainer.className = "bird-image-container";
         const image = document.createElement("img");
@@ -140,7 +127,6 @@ Module.register("MMM-BirdOfTheDay", {
         image.style.maxWidth = this.config.imageWidth;
         imageContainer.appendChild(image);
 
-        // Info section
         const info = document.createElement("div");
         info.className = "bird-info";
 
@@ -172,7 +158,6 @@ Module.register("MMM-BirdOfTheDay", {
             info.appendChild(status);
         }
 
-        // Assembly
         wrapper.appendChild(titleContainer);
         contentWrapper.appendChild(imageContainer);
         contentWrapper.appendChild(info);
