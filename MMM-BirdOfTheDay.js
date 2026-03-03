@@ -2,30 +2,32 @@ Module.register("MMM-BirdOfTheDay", {
     defaults: {
         apiKey: "",
         endpoint: "https://nuthatch.lastelm.software/v2/birds",
-        rotation: "Daily", 
-        updateInterval: 24 * 60 * 60 * 1000, 
-        fadeSpeed: 2000, 
-        imageWidth: "400px", 
-        fontSize: "medium", 
-        showName: true, 
-        showSciName: true, 
-        showRegion: true, 
-        showStatus: true, 
+        rotation: "Daily",
+        updateInterval: 24 * 60 * 60 * 1000,
+        fadeSpeed: 2000,
+        imageWidth: "400px",
+        fontSize: "medium",
+        showName: true,
+        showSciName: true,
+        showRegion: true,
+        showStatus: true,
         maxHistory: 100,
-        pageSize: 100,
         textPosition: "below",
         showTitleLine: true
     },
 
-    bird: null, 
+    bird: null,
     history: [],
+    allBirds: [],
 
     start: function () {
         this.updateIntervalFromRotation();
-        this.getBird();
-        setInterval(() => {
+        this.loadAllBirds().then(() => {
             this.getBird();
-        }, this.config.updateInterval);
+            setInterval(() => {
+                this.getBird();
+            }, this.config.updateInterval);
+        });
     },
 
     updateIntervalFromRotation: function () {
@@ -45,44 +47,58 @@ Module.register("MMM-BirdOfTheDay", {
         }
     },
 
+    loadAllBirds: function () {
+        const fetchPage = (page, accumulated) => {
+            const url = `${this.config.endpoint}?hasImg=true&pageSize=100&page=${page}`;
+            return fetch(url, {
+                headers: { "api-key": this.config.apiKey },
+            })
+            .then((response) => {
+                if (!response.ok) throw new Error("Failed to fetch bird data.");
+                return response.json();
+            })
+            .then((data) => {
+                const birds = data.entities.filter(
+                    (bird) => bird.images && bird.images.length > 0
+                );
+                const all = accumulated.concat(birds);
+                if (data.entities.length === 100) {
+                    return fetchPage(page + 1, all);
+                }
+                this.allBirds = all;
+                console.log(`MMM-BirdOfTheDay: loaded ${all.length} birds across ${page} page(s).`);
+                return all;
+            });
+        };
+
+        return fetchPage(1, []).catch((error) => {
+            console.error("MMM-BirdOfTheDay: Error loading birds:", error);
+        });
+    },
+
     getBird: function () {
-        const url = `${this.config.endpoint}?hasImg=true&pageSize=${this.config.pageSize}`;
-        
-        fetch(url, {
-            headers: { "api-key": this.config.apiKey },
-        })
-        .then((response) => {
-            if (!response.ok) throw new Error("Failed to fetch bird data.");
-            return response.json();
-        })
-        .then((data) => {
-            const birdsWithImages = data.entities.filter(
-                (bird) => bird.images && bird.images.length > 0
-            );
-            if (birdsWithImages.length > 0) {
-                let bird;
-                let attempts = 0;
+        if (this.allBirds.length === 0) {
+            console.warn("MMM-BirdOfTheDay: No birds available.");
+            return;
+        }
 
-                do {
-                    const randomIndex = Math.floor(Math.random() * birdsWithImages.length);
-                    bird = birdsWithImages[randomIndex];
-                    attempts++;
-                } while (this.history.includes(bird.sciName) && attempts < 100);
+        let bird;
+        let attempts = 0;
+        const maxAttempts = this.allBirds.length;
 
-                if (attempts >= 100) {
-                    console.warn("Could not find a unique bird, showing the first available.");
-                }
+        do {
+            const randomIndex = Math.floor(Math.random() * this.allBirds.length);
+            bird = this.allBirds[randomIndex];
+            attempts++;
+        } while (this.history.includes(bird.sciName) && attempts < maxAttempts);
 
-                this.history.push(bird.sciName);
-                if (this.history.length > this.config.maxHistory) {
-                    this.history.shift();
-                }
+        this.history.push(bird.sciName);
+        if (this.history.length > this.config.maxHistory) {
+            this.history.shift();
+        }
 
-                this.bird = bird;
-                this.updateDom(this.config.fadeSpeed);
-            }
-        })
-        .catch((error) => console.error("Error fetching bird data:", error));
+        this.bird = bird;
+        this.updateDom(this.config.fadeSpeed);
     },
 
     getStyles: function () {
