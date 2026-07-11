@@ -1,0 +1,10 @@
+{
+    "TITLE_DAILY": "Dagens fågel",
+    "TITLE_WEEKLY": "Veckans fågel",
+    "TITLE_HOURLY": "Timmens fågel",
+    "LOADING": "Laddar fågel…",
+    "ERROR_NO_KEY": "MMM-BirdOfTheDay: ange din Nuthatch API-nyckel i config.js",
+    "ERROR_LOADING": "Kunde inte nå fågeldatabasen — försöker igen…",
+    "REGION": "Region",
+    "STATUS": "Bevarandestatus"
+}

@@ -1,0 +1,3 @@
+node_modules/
+.botd-state.json
+.playwright-mcp/
