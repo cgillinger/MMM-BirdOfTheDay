@@ -1,0 +1,10 @@
+{
+    "TITLE_DAILY": "Bird of the Day",
+    "TITLE_WEEKLY": "Bird of the Week",
+    "TITLE_HOURLY": "Bird of the Hour",
+    "LOADING": "Loading bird…",
+    "ERROR_NO_KEY": "MMM-BirdOfTheDay: set your Nuthatch API key in config.js",
+    "ERROR_LOADING": "Could not reach the bird database — retrying…",
+    "REGION": "Region",
+    "STATUS": "Conservation Status"
+}

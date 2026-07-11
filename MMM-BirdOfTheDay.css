@@ -93,3 +93,14 @@
 .bird-text-left .bird-content {
     flex-direction: row-reverse;
 }
+
+/* Give the text column room to breathe in the side-by-side layouts */
+.bird-text-left .bird-info,
+.bird-text-right .bird-info {
+    min-width: 180px;
+}
+
+/* Error message shown when the API is unreachable or the key is missing */
+.bird-error {
+    text-align: center;
+}

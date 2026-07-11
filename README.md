@@ -2,7 +2,7 @@
 
 # 🐦 MMM-BirdOfTheDay
 
-[![Version](https://img.shields.io/badge/version-1.1.8-blue.svg?style=flat-square)](https://github.com/cgillinger/MMM-BirdOfTheDay/releases)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg?style=flat-square)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 [![MagicMirror²](https://img.shields.io/badge/MagicMirror²-compatible-brightgreen.svg?style=flat-square)](https://magicmirror.builders/)
 [![Powered by Nuthatch](https://img.shields.io/badge/Powered%20by-Nuthatch%20API-orange.svg?style=flat-square)](https://nuthatch.lastelm.software/)
@@ -27,6 +27,7 @@ A **MagicMirror²** module that displays a beautifully rendered Bird of the Day 
 - [Configuration](#-configuration)
 - [Layout Options](#-layout-options)
 - [Customization](#-customization)
+- [Changelog](CHANGELOG.md)
 - [Credits](#-credits)
 - [License](#-license)
 
@@ -46,13 +47,16 @@ A **MagicMirror²** module that displays a beautifully rendered Bird of the Day 
 
 ## ✨ Features
 
-- 🖼️ Displays a random bird with a high-quality image
-- 🔄 Configurable rotation — **Hourly**, **Daily**, or **Weekly**
+- 🖼️ Displays a random bird with a high-quality image — and picks a random photo when a bird has several
+- 🔄 Calendar-aligned rotation — **Hourly** (top of the hour), **Daily** (midnight), or **Weekly** (Monday at midnight)
+- 💾 Remembers the current bird and history across restarts — the mirror rebooting no longer changes today's bird
 - 📋 Optional details: common name, scientific name, region, and conservation status
 - 📐 Flexible layout: text **below**, **left**, or **right** of the image
 - 🎨 Fully customizable image size and font size via CSS
 - 🧠 Smart history tracking to avoid showing the same bird twice
-- 🏷️ Configurable module title based on rotation interval
+- 🏷️ Module title follows the rotation interval, in your mirror's language (English and Swedish included)
+- 🔁 Retries automatically (and tells you on the mirror) if the bird database is unreachable at startup
+- 🔐 API calls run server-side in a node helper, so your API key stays out of browser traffic
 
 ---
 
@@ -112,7 +116,7 @@ Visit the [Nuthatch API key generation page](https://nuthatch.lastelm.software/g
 | Option | Type | Default | Required | Description |
 |--------|------|---------|:--------:|-------------|
 | `apiKey` | `string` | —  | ✅ **Yes** | Your Nuthatch API key |
-| `rotation` | `string` | `"Daily"` | No | Update frequency: `"Hourly"`, `"Daily"`, or `"Weekly"` |
+| `rotation` | `string` | `"Daily"` | No | Update frequency: `"Hourly"` (top of the hour), `"Daily"` (midnight), or `"Weekly"` (Monday at midnight) |
 | `imageWidth` | `string` | `"400px"` | No | Width of the bird image (any CSS value) |
 | `fontSize` | `string` | `"medium"` | No | Font size for text: `"small"`, `"medium"`, or `"large"` |
 | `textPosition` | `string` | `"below"` | No | Text position relative to image: `"below"`, `"left"`, or `"right"` |
@@ -167,6 +171,8 @@ config: {
 ## 🎨 Customization
 
 You can further tweak the appearance by editing `MMM-BirdOfTheDay.css` in the module folder. Adjust colors, fonts, spacing, and more to match your mirror's theme.
+
+> **Good to know:** the module stores its state (current bird and history) in `.botd-state.json` inside the module folder so your Bird of the Day survives restarts. Delete that file if you ever want to reset the rotation. And keep your `config.js` out of version control — it contains your API key.
 
 ---
 

@@ -3,7 +3,6 @@ Module.register("MMM-BirdOfTheDay", {
         apiKey: "",
         endpoint: "https://nuthatch.lastelm.software/v2/birds",
         rotation: "Daily",
-        updateInterval: 24 * 60 * 60 * 1000,
         fadeSpeed: 2000,
         imageWidth: "400px",
         fontSize: "medium",
@@ -11,106 +10,120 @@ Module.register("MMM-BirdOfTheDay", {
         showSciName: true,
         showRegion: true,
         showStatus: true,
-        maxHistory: 100,
+        maxHistory: 50,
         textPosition: "below",
         showTitleLine: true
     },
 
-    bird: null,
-    history: [],
-    allBirds: [],
+    requiresVersion: "2.1.0",
 
     start: function () {
-        this.updateIntervalFromRotation();
-        this.loadAllBirds().then(() => {
-            this.getBird();
-            setInterval(() => {
-                this.getBird();
-            }, this.config.updateInterval);
-        });
-    },
+        this.bird = null;
+        this.imageUrl = null;
+        this.expiresAt = null;
+        this.error = null;
+        this.rotationTimer = null;
 
-    updateIntervalFromRotation: function () {
-        switch (this.config.rotation) {
-            case "Weekly":
-                this.config.updateInterval = 7 * 24 * 60 * 60 * 1000;
-                break;
-            case "Daily":
-                this.config.updateInterval = 24 * 60 * 60 * 1000;
-                break;
-            case "Hourly":
-                this.config.updateInterval = 60 * 60 * 1000;
-                break;
-            default:
-                console.warn("Invalid rotation value. Defaulting to 'Daily'.");
-                this.config.updateInterval = 24 * 60 * 60 * 1000;
-        }
-    },
-
-    loadAllBirds: function () {
-        const fetchPage = (page, accumulated) => {
-            const url = `${this.config.endpoint}?hasImg=true&pageSize=100&page=${page}`;
-            return fetch(url, {
-                headers: { "api-key": this.config.apiKey },
-            })
-            .then((response) => {
-                if (!response.ok) throw new Error("Failed to fetch bird data.");
-                return response.json();
-            })
-            .then((data) => {
-                const birds = data.entities.filter(
-                    (bird) => bird.images && bird.images.length > 0
-                );
-                const all = accumulated.concat(birds);
-                if (data.entities.length === 100) {
-                    return fetchPage(page + 1, all);
-                }
-                this.allBirds = all;
-                console.log(`MMM-BirdOfTheDay: loaded ${all.length} birds across ${page} page(s).`);
-                return all;
-            });
-        };
-
-        return fetchPage(1, []).catch((error) => {
-            console.error("MMM-BirdOfTheDay: Error loading birds:", error);
-        });
-    },
-
-    getBird: function () {
-        if (this.allBirds.length === 0) {
-            console.warn("MMM-BirdOfTheDay: No birds available.");
+        if (!this.config.apiKey) {
+            this.error = "ERROR_NO_KEY";
             return;
         }
+        this.requestBird();
+    },
 
-        let bird;
-        let attempts = 0;
-        const maxAttempts = this.allBirds.length;
+    requestBird: function () {
+        this.sendSocketNotification("BOTD_GET_BIRD", {
+            identifier: this.identifier,
+            config: {
+                endpoint: this.config.endpoint,
+                apiKey: this.config.apiKey,
+                rotation: this.config.rotation,
+                maxHistory: this.config.maxHistory
+            }
+        });
+    },
 
-        do {
-            const randomIndex = Math.floor(Math.random() * this.allBirds.length);
-            bird = this.allBirds[randomIndex];
-            attempts++;
-        } while (this.history.includes(bird.sciName) && attempts < maxAttempts);
-
-        this.history.push(bird.sciName);
-        if (this.history.length > this.config.maxHistory) {
-            this.history.shift();
+    socketNotificationReceived: function (notification, payload) {
+        if (payload.identifier !== this.identifier) {
+            return;
         }
+        if (notification === "BOTD_BIRD") {
+            this.error = null;
+            this.bird = payload.bird;
+            this.imageUrl = payload.imageUrl;
+            this.expiresAt = payload.expiresAt;
+            this.updateDom(this.config.fadeSpeed);
+            this.scheduleNextRotation();
+        } else if (notification === "BOTD_ERROR") {
+            Log.error(`MMM-BirdOfTheDay: ${payload.message}`);
+            if (!this.bird) {
+                this.error = "ERROR_LOADING";
+                this.updateDom();
+            }
+        }
+    },
 
-        this.bird = bird;
-        this.updateDom(this.config.fadeSpeed);
+    scheduleNextRotation: function () {
+        clearTimeout(this.rotationTimer);
+        if (!this.expiresAt) {
+            return;
+        }
+        const delay = Math.max(this.expiresAt - Date.now(), 0) + 2000;
+        this.rotationTimer = setTimeout(() => this.requestBird(), delay);
+    },
+
+    suspend: function () {
+        clearTimeout(this.rotationTimer);
+        this.rotationTimer = null;
+    },
+
+    resume: function () {
+        if (!this.config.apiKey) {
+            return;
+        }
+        if (this.expiresAt && Date.now() >= this.expiresAt) {
+            this.requestBird();
+        } else {
+            this.scheduleNextRotation();
+        }
     },
 
     getStyles: function () {
         return ["MMM-BirdOfTheDay.css"];
     },
 
-    getDom: function() {
+    getTranslations: function () {
+        return {
+            en: "translations/en.json",
+            sv: "translations/sv.json"
+        };
+    },
+
+    getTitle: function () {
+        switch (this.config.rotation) {
+            case "Weekly":
+                return this.translate("TITLE_WEEKLY");
+            case "Hourly":
+                return this.translate("TITLE_HOURLY");
+            default:
+                return this.translate("TITLE_DAILY");
+        }
+    },
+
+    getDom: function () {
         const wrapper = document.createElement("div");
         wrapper.className = `bird-wrapper bird-text-${this.config.textPosition}`;
 
+        if (this.error) {
+            const error = document.createElement("div");
+            error.className = "bird-error dimmed light small";
+            error.textContent = this.translate(this.error);
+            wrapper.appendChild(error);
+            return wrapper;
+        }
+
         if (!this.bird) {
-            wrapper.innerHTML = "Loading Bird...";
+            wrapper.textContent = this.translate("LOADING");
             return wrapper;
         }
 
@@ -119,11 +132,7 @@ Module.register("MMM-BirdOfTheDay", {
 
         const title = document.createElement("h2");
         title.className = "bird-title";
-        title.innerHTML = this.config.rotation === "Weekly" 
-            ? "Bird of the Week" 
-            : this.config.rotation === "Hourly"
-            ? "Bird of the Hour"
-            : "Bird of the Day";
+        title.textContent = this.getTitle();
         titleContainer.appendChild(title);
 
         if (this.config.showTitleLine) {
@@ -139,37 +148,40 @@ Module.register("MMM-BirdOfTheDay", {
         imageContainer.className = "bird-image-container";
         const image = document.createElement("img");
         image.className = "bird-image";
-        image.src = this.bird.images[0];
+        image.src = this.imageUrl || (this.bird.images && this.bird.images[0]) || "";
+        image.alt = this.bird.name || "";
         image.style.maxWidth = this.config.imageWidth;
         imageContainer.appendChild(image);
 
         const info = document.createElement("div");
         info.className = "bird-info";
 
-        if (this.config.showName) {
+        if (this.config.showName && this.bird.name) {
             const birdName = document.createElement("h3");
             birdName.className = "bird-name";
-            birdName.innerHTML = this.bird.name;
+            birdName.textContent = this.bird.name;
             info.appendChild(birdName);
         }
 
-        if (this.config.showSciName) {
+        if (this.config.showSciName && this.bird.sciName) {
             const sciName = document.createElement("p");
-            sciName.innerHTML = `<i>${this.bird.sciName}</i>`;
+            const italic = document.createElement("i");
+            italic.textContent = this.bird.sciName;
+            sciName.appendChild(italic);
             sciName.style.fontSize = this.config.fontSize;
             info.appendChild(sciName);
         }
 
-        if (this.config.showRegion) {
+        if (this.config.showRegion && Array.isArray(this.bird.region) && this.bird.region.length > 0) {
             const region = document.createElement("p");
-            region.innerHTML = `Region: ${this.bird.region.join(", ")}`;
+            region.textContent = `${this.translate("REGION")}: ${this.bird.region.join(", ")}`;
             region.style.fontSize = this.config.fontSize;
             info.appendChild(region);
         }
 
-        if (this.config.showStatus) {
+        if (this.config.showStatus && this.bird.status) {
             const status = document.createElement("p");
-            status.innerHTML = `Conservation Status: ${this.bird.status}`;
+            status.textContent = `${this.translate("STATUS")}: ${this.bird.status}`;
             status.style.fontSize = this.config.fontSize;
             info.appendChild(status);
         }
